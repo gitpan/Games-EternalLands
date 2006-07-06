@@ -1,0 +1,4 @@
+
+mkconst.pl reads client_serv.h from the official client
+source and output perl hash types with their values.
+The name of the types then need to be manually edited ;-(

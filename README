@@ -1,0 +1,38 @@
+
+This is my initial version of a client/bot for Eternal Lands.
+It should be viewed as a 'proof of concept'. The basic communication
+and simple keeping of state should be fairly correct and the
+the example bot Trader.pl successfully trades.
+
+There is the beginning of more advanced functionality but it
+is much less well developed. The way the higher level functions
+are organised is quite likely to change in the future as I am
+unsure as to what is part of the Client class the Bot class and
+what should be in the instance script.
+
+Also this is my first CPAN package, so le me know if I have
+messed something up
+
+The classes the package provides (all under Games::EternalLands)
+are
+
+Constants.pm
+--------------
+contains sensible name => value mappings for the Eternal Lands
+protocol
+
+Client.pm
+-----------
+contains the class for just the basic client
+parts. It handles the following:-
+
+    sending/receiveing packets
+    decoding packets
+    maintaining inventory
+    simple trades (NO checking is done)
+
+Bot.pm
+------
+    maintains a selling and buying list in YAML
+    and checks that the both sides of the trade
+    are correct
