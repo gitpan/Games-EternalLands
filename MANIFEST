@@ -1,7 +1,13 @@
+Changes
+Makefile.PL
+MANIFEST
+README
 examples/adminhelp.txt
 examples/buying.yaml
+examples/Harvester.pl
 examples/help.txt
 examples/Hunter.pl
+examples/knowledge.yaml
 examples/readme
 examples/selling.yaml
 examples/Trader.pl
@@ -9,10 +15,9 @@ lib/Games/EternalLands/Bot.pm
 lib/Games/EternalLands/Client.pm
 lib/Games/EternalLands/Constants.pm
 lib/Games/EternalLands/Map.pm
-Makefile.PL
-MANIFEST			This list of files
-README
-CREDITS
-LICENSE
-utils/mkconst.pl
-utils/readme
+lib/Games/EternalLands/MapHelper.pm
+src/bheap.c
+src/bheap.h
+src/heap_info.h
+src/Makefile.PL
+src/MapHelper.xs

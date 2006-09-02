@@ -14,7 +14,6 @@ my $ADMINS = "DarthCarter";
 my $OWNER  = "DarthCarter";
 my $USER   = "DarthHunter";
 my $PASS   = "CthrekGoru";
-my $ELDIR  = "/usr/local/games/el/";
 my $SLEEP  = 2;
 
 defined($USER) || die "USER must be set";
@@ -25,13 +24,20 @@ defined($PASS) || die "PASS must be set";
 #die "You MUST NOT run this bot on the real server, you will be banned";
 
 
+my @mission = ();
+#@mission = (@Trik,@WSCoal);
+#@mission = (@VCMaze,@VC);
+
 my $bot = Games::EternalLands::Bot->new(
               -server=>$SERVER, -port=>$PORT,
-              -elDir=>$ELDIR,
-              -owner=> $OWNER, -admins=>$ADMINS,
+              -elDir=>'/usr/local/games/el/',
+              -owner=> $OWNER,
+              -admins=>$ADMINS, -msgInterval=>15,
+              -sellingFile=>'selling.yaml',
+              -buyingFile=>'buying.yaml',
               -knowledgeFile=>'knowledge.yaml',
               -helpFile=>'help.txt',-adminhelpFile=>'adminhelp.txt',
-#              -debug=>$DEBUG_TEXT,
+              -debug=>$DEBUG_TEXT,
 #              -debug=>$DEBUG_TYPES,
 #              -debug=>$DEBUG_PATH,
 #              -debug=>$DEBUG_PACKETS,
@@ -39,63 +45,16 @@ my $bot = Games::EternalLands::Bot->new(
 
 $bot->{'canTrade'} = 0;
 
+my $knowledge;
+
+my %Visited;
+
 my %isFood =(
     'cooked meat' => 25,
     'fruits' => 20,
     'vegetables' => 15,
     'bread' => 10,
 );
-
-my %canHunt = (
-    $brown_rabbit => 10,
-    $beaver => 15,
-    $brownie => 20,
-    $wood_sprite => 25,
-    $deer => 30,
-);
-
-sub canHunt
-{
-    my $bot = shift;
-    my ($my_mp,$actor) = @_;
-
-    (! $bot->isDead($actor)) || return 0;
-    #($actor->{'kind'} >= 5)  || return 0;
-
-    my $need_mp = $canHunt{chr($actor->{'type'})} || 1000;
-
-    return ($my_mp >= $need_mp);
-}
-
-sub cmpHunt
-{
-    my $bot = shift;
-    my ($a,$b) = @_;
-
-    my $mp1 = $canHunt{chr($a->{'type'})};
-    my $mp2 = $canHunt{chr($b->{'type'})};
-
-    ($mp1 == $mp2)  || return ($mp2 <=> $mp1);
-
-    my $d1 = $bot->distanceTo($a->{'xpos'},$a->{'ypos'});
-    my $d2 = $bot->distanceTo($b->{'xpos'},$b->{'ypos'});
-
-    return ($d1 <=> $d2);
-}
-
-sub GETBREAD
-{
-    my $bot = shift;
-    my ($g) = @_;
-
-    ($bot->qtyOnHand('bread') < $g->{'qty'}) || return 1;
-
-    my ($bag,$dist) = $bot->nearestBag();
-    defined($bag) || return 0;
-    $g->{'subGoals'} = defined($bag) ? [{goal=>\&GETBAG,x=>$bag->{'bagX'},y=>$bag->{'bagY'}}]
-                                     : [{goal=>\&SLEEP,seconds=>10}];
-    return undef;
-}
 
 sub STO
 {
@@ -222,7 +181,7 @@ sub HARVEST($$)
         my ($map,$id) = ($g->{'map'},$g->{'id'});
         if ($bot->crntMap ne $map) {
             my $h = $bot->{'knowledge'}->{'harvByMap'}->{$map}->{'byID'}->{$id};
-            $g->{'subGoals'} = [{'goal'=>\&GOTO,map=>$map,x=>$h->{'x'},y=>$h->{'y'}}];
+            $g->{'subGoals'} = [{'goal'=>\&GOTO,map=>$map,x=>$h->{'x'},y=>$h->{'y'},delta=>1}];
         }
         else {
             my $d = $bot->distanceToObject($g->{'id'});
@@ -236,6 +195,9 @@ sub HARVEST($$)
                 if ($g->{'attempts'} > 2) {
                     $bot->Log("Too many failed attempts to harvest");
                     return 0;
+                }
+                if (!($bot->{'specialDay'} =~ m/Acid Rain Day/i)) {
+                    $bot->equipItem('excavator cape');
                 }
                 $bot->sitDown();
                 $bot->harvest($g->{'id'});
@@ -318,6 +280,75 @@ sub NEWEXIT
     return 0;
 }
 
+sub cmpExits
+{
+    my $bot = shift;
+    my ($a,$b) = @_;
+
+    my $d1 = $bot->distanceToObject($a);
+    my $d2 = $bot->distanceToObject($b);
+
+    return $d1 <=> $d2;
+}
+
+sub unExploredExits
+{
+    my $bot = shift;
+    my ($map) = @_;
+
+    my @unExplored;
+    if (!defined($map)) {
+        $map = $bot->crntMap();
+    }
+    my $exits = $bot->getAllExits($map);
+    my @exits = sort {cmpExits($bot,$a,$b)} @$exits;
+    @exits    = map {$bot->getExitDetails($map,$_)} @exits;
+    foreach my $exit (@exits) {
+        defined($exit) || next;
+        !defined($exit->{'toX'}) || next;
+        !defined($exit->{'toY'}) || next;
+        !defined($exit->{'msg'}) || next;
+        !defined($exit->{'timedOut'}) || next;
+        push(@unExplored,$exit);
+    }
+    if (wantarray) {
+        return @unExplored;
+    }
+    return ($#unExplored == -1) ? undef : \@unExplored;
+}
+
+sub EXPLORE
+{
+    my $bot = shift;
+    my ($g) = @_;
+
+    defined($g->{'subGoals'}) && return ($#{$g->{'subGoals'}} == -1);
+
+    my ($map,$x,$y) = $bot->myLocation();
+
+    foreach my $exit (unExploredExits($bot,undef)) {
+        if (my $path = $bot->findPathClose([$x,$y],[$exit->{'fromX'},$exit->{'fromY'}],10)) {
+            $g->{'subGoals'} = [{goal=>\&USEEXIT,id=>$exit->{'id'}}];
+            return undef;
+        }
+    }
+    my $myLoc = [$map,$x,$y];
+    my @connectedMaps = $bot->connectedMaps(undef);
+    foreach my $m (@connectedMaps) {
+        foreach my $e (unExploredExits($bot,$m)) {
+            my $exitLoc = [$m,$e->{'fromX'},$e->{'fromY'}];
+            if (my $pathToExit = $bot->findPathToMap($myLoc,$exitLoc,5)) {
+                #if (my $path = $bot->doPathFind($m,$?,$?,$exit->{'fromX'},$exit->{'fromY'},5)) {
+                #    $g->{'subGoals'} = [{goal=>\&USEEXIT,id=>$exit->{'id'}}];
+                #    return undef;
+                #}
+            }
+        }
+    }
+
+    return 0;
+}
+
 sub PICKUP
 {
     my $bot = shift;
@@ -357,77 +388,6 @@ sub GETBAG
                         {goal=>\&PICKUP,id=>$id},
                         {goal=>\&SLEEP,seconds=>5},
                        ];
-    return undef;
-}
-
-sub KILL
-{
-    my $bot = shift;
-    my ($g) = @_;
-
-    defined($g->{'subGoals'}) && return ($#{$g->{'subGoals'}} == -1);
-
-    my $kill = $bot->killActor($g->{'id'});
-    defined($kill) || return undef;
-    $kill          || return 0;
-
-    my ($x,$y) = $bot->actorsPosition($g->{'id'});
-    (defined($x) and defined($y)) || return 1;
-    $g->{'subGoals'} = [{goal=>\&SLEEP,seconds=>2},
-                        {goal=>\&GETBAG,x=>$x,y=>$y},
-                       ];
-
-    return undef;
-}
-
-sub HUNT
-{
-    my $bot = shift;
-    my ($g) = @_;
-
-
-    defined($g->{'subGoals'}) && return ($#{$g->{'subGoals'}} == -1);
-
-    if ($bot->crntMap() ne 'startmap') {
-        $g->{'subGoals'} = [{goal=>\&GOTO,map=>'startmap',x=>102,y=>143,delta=>3}];
-        return undef;
-    }
-
-    my @mp = $bot->getStat('mp');
-    if ($mp[1]-$mp[0] >= 23) {
-        if (my $restore = $bot->haveItem('potion of body restoration')) {
-            my $cool = $restore->{'cooldown'};
-            ($cool < time()) && $bot->useInventoryItem('potion of body restoration');
-        }
-    }
-    elsif ($mp[1]-$mp[0] >= 8) {
-        if (my $healing = $bot->haveItem('potion of minor healing')) {
-            my $cool = $healing->{'cooldown'};
-            ($cool < time()) && $bot->useInventoryItem('potion of minor healing');
-        }
-    }
-
-    my $me     = $bot->{'me'};
-    my @actors = grep {canHunt($bot,$mp[0],$_)} @{$bot->getActors()};
-    @actors    = sort {cmpHunt($bot,$a,$b)} @actors;
-
-    if ($#actors < 0) {
-        if (($me->{'lastMoved'} < time()-10) and !defined($bot->{'path'})) {
-            my $to = $bot->randomLocation();
-            $bot->moveCloseTo($to,3);
-            $bot->Log("Moving to $to->[0],$to->[1]\n");
-        }
-    }
-
-    my $kill = $actors[0];
-    defined($kill) || return undef;
-    defined($kill->{'type'}) || return undef;
-    my $min_mp = $canHunt{chr($kill->{'type'})} || 10000;
-
-    if (($mp[0] >= $min_mp) and (! $bot->isDead($kill))) {
-        $g->{'subGoals'} = [{goal=>\&KILL,id=>$kill->{'id'},name=>$kill->{'name'}}];
-        return undef;
-    }
     return undef;
 }
 
@@ -497,13 +457,12 @@ sub doGoal($$$)
 
 my %goalDesc = (
     \&WAITTILL => ["WAITTILL %d",'time'],     \&SAY     => ["SAY '%s'",'text'],
-    \&ENTER   => ["ENTER %d",'id'],
-    \&HUNT     => ["HUNT",''],               \&KILL    => ["KILL %s(%d)",'name','id'],
+    \&EXPLORE  => ["EXPLORE",''],             \&ENTER   => ["ENTER %d",'id'],
     \&GETBAG   => ["GETBAG %d,%d",'x','y'],   \&OPENBAG => ["GETBAG %d",'id'],
     \&GOTONPC  => ["GOTONPC %s",'name'],      \&NEWEXIT => ["NEWEXIT",''],
 
-    \&HARVEST      => ["HARVEST %d %s(%d) on %s",'qty','name','id','map'],
     \&MOVETO       => ["MOVETO %d,%d (delta=%d)",'x','y','delta'],
+    \&HARVEST      => ["HARVEST %d %s(%d) on %s",'qty','name','id','map'],
     \&SLEEP        => ["SLEEP %d",'seconds'],
     \&TOUCHPLAYER  => ["TOUCHPLAYER %s",'name'],
     \&SELLTONPC    => ["SELLTONPC %d %s",'qty','item'],
@@ -513,7 +472,6 @@ my %goalDesc = (
     \&GOTO         => ["GOTO %s %d,%d",'map','x','y'],
     \&STO          => ["STO %d %s at %s",'qty','item','name'],
     \&SELL         => ["SELL %d %s to %s",'qty','item','name'],
-    \&GETBREAD     => ["GETBREAD %d",'qty'],
 );
 
 sub goalDesc
@@ -577,34 +535,29 @@ sub decide
 
     my @carry  = $bot->getStat('carry');
     my @mp     = $bot->getStat('mp');
-    my $meat   = $bot->qtyOnHand('raw meat');
-    my $fur    = $bot->qtyOnHand('brown rabbit fur');
+    my $veg    = $bot->qtyOnHand('vegetables');
+    my $lilacs = $bot->qtyOnHand('lilacs');
     my $gc     = $bot->qtyOnHand('gold coins');
-    my $bread  = $bot->qtyOnHand('bread');
     my $n      = $carry[1]-$carry[0];
 
-    if ($bread < 3) {
-        push(@goals, {goal=>\&GETBREAD,qty=>10});
-    }
-    elsif ($gc > 500) {
+    if ($gc > 2000) {
         push(@goals,{goal=>\&STO,item=>'gold coins',qty=>$gc,name=>'Molgor'});
     }
-    elsif ($n <= 15  || $bot->{'nCarry'} >=25) {
-        foreach my $item (values %{$bot->{'invByPos'}}) {
-            my $name = $item->{'name'};
-            $isFood{$name} && next;
-            ($name =~ m/raw meat/i) && next;
-            ($name =~ m/brown rabbit fur/i) && next;
-            my $qty = $item->{'quantity'};
-            push(@goals,{goal=>\&STO,item=>$name,qty=>$qty,name=>'Molgor'});
-        }
-        if (($meat > 0) || ($fur > 0)) {
-            push(@goals,{goal=>\&SELL,name=>'Reca',item=>'raw meat',qty=>$meat});
-            push(@goals,{goal=>\&SELL,name=>'Reca',item=>'brown rabbit fur',qty=>$fur});
+    elsif ($n <= 12  || $bot->{'nCarry'} >=25) {
+        if ($lilacs > 0) {
+            push(@goals,{goal=>\&SELL,name=>'Lavinia',item=>'lilacs',qty=>$lilacs});
         }
     }
+    elsif (($mp[0] > 25) && ($veg < 5)) {
+        my @veg = $bot->findHarvest('map5nf','vegetables');
+        push(@goals, {goal=>\&HARVEST,map=>'map5nf',id=>$veg[0]->{'id'},name=>'vegetables',qty=>15});
+    }
+    elsif ($mp[0] > 25) {
+        $lilacs = int(($n+$lilacs-10)/2)*2;
+        push(@goals, {goal=>\&HARVEST,map=>'map5nf',id=>518,name=>'lilacs',qty=>$lilacs});
+    }
     else {
-        @goals = ({goal=>\&HUNT});
+        @goals = ({goal=>\&SLEEP,seconds=>10});
     }
     return @goals;
 }
@@ -625,6 +578,10 @@ sub main
 
                 (defined($x) and defined($y)) || next;
                 $bot->invIsComplete()         || next;
+
+                if ($bot->{'specialDay'} =~ m/Acid Rain Day/i) {
+                    $bot->unEquipAll();
+                }
 
                 if ($#Goals == -1) {
                     @Goals = decide($bot);

@@ -1,10 +1,13 @@
 
 Trader.pl is a simple Trade Bot.
 
-Hunter.pl kills animals on IP that are defined
-in the canHunt hash and picks up there meat. It also
-finds bread in bags and eats it when needed.
+Harvester.pl harvests lilacs in VOTD and sells them
+to the flower shop
 
-Huntel.pl MUST NOT be run on the real server - it will
-result in you being banned. If you wish to experiment
-with this bot do so on the test server only
+Hunter.pl kills animals that are defined in the canHunt
+hash and picks up there meat. It also finds bread in bags
+and eats it when needed. It may
+
+Huntel.pl and Harvester.pl MUST NOT be run on the real
+server - it will result in you being banned. If you wish
+to experiment with this bot do so on the test server only

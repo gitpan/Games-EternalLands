@@ -11,15 +11,15 @@ use Games::EternalLands::Constants qw(%ClientCommandsByID $DEBUG_PACKETS $DEBUG_
 
 my $SERVER = "eternal-lands.network-studio.com";
 my $PORT   = "2001";
-my $ADMINS = "";
-my $OWNER  = "";
-my $USER   = undef;
-my $PASS   = undef;
+my $ADMINS = "DarthCarter";
+my $OWNER  = "DarthCarter";
+my $USER   = 'DarthHunter';
+my $PASS   = 'CthrekGoru';
 my $SLEEP  = 2;
 
 my $bot = Games::EternalLands::Bot->new(
               -server=>$SERVER, -port=>$PORT,
-              -mapDir=>'/home/franc/el/',
+              -elDir=>'/usr/local/games/el/',
               -owner=> $OWNER,
               -admins=>$ADMINS, -msgInterval=>15,
               -sellingFile=>'selling.yaml',

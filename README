@@ -1,38 +1,40 @@
+Games-EternalLands-PathFinder version 0.01
+==========================================
 
-This is my initial version of a client/bot for Eternal Lands.
-It should be viewed as a 'proof of concept'. The basic communication
-and simple keeping of state should be fairly correct and the
-the example bot Trader.pl successfully trades.
+The README is used to introduce the module and provide instructions on
+how to install the module, any machine dependencies it may have (for
+example C compilers and installed libraries) and any other information
+that should be provided before the module is installed.
 
-There is the beginning of more advanced functionality but it
-is much less well developed. The way the higher level functions
-are organised is quite likely to change in the future as I am
-unsure as to what is part of the Client class the Bot class and
-what should be in the instance script.
+A README file is required for CPAN modules since CPAN extracts the
+README file from a module distribution so that people browsing the
+archive can use it get an idea of the modules uses. It is usually a
+good idea to provide version information here so that people can
+decide whether fixes for the module are worth downloading.
 
-Also this is my first CPAN package, so le me know if I have
-messed something up
+INSTALLATION
 
-The classes the package provides (all under Games::EternalLands)
-are
+To install this module type the following:
 
-Constants.pm
---------------
-contains sensible name => value mappings for the Eternal Lands
-protocol
+   perl Makefile.PL
+   make
+   make test
+   make install
 
-Client.pm
------------
-contains the class for just the basic client
-parts. It handles the following:-
+DEPENDENCIES
 
-    sending/receiveing packets
-    decoding packets
-    maintaining inventory
-    simple trades (NO checking is done)
+This module requires these other modules and libraries:
 
-Bot.pm
-------
-    maintains a selling and buying list in YAML
-    and checks that the both sides of the trade
-    are correct
+  blah blah blah
+
+COPYRIGHT AND LICENCE
+
+Put the correct copyright and licence information here.
+
+Copyright (C) 2006 by root
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself, either Perl version 5.8.6 or,
+at your option, any later version of Perl 5 you may have available.
+
+
