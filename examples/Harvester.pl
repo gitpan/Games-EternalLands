@@ -10,10 +10,10 @@ use Games::EternalLands::Constants qw(:Debug :ActorTypes);
 # your character
 my $SERVER = "eternal-lands.network-studio.com";
 my $PORT   = "2001";
-my $ADMINS = "DarthCarter";
-my $OWNER  = "DarthCarter";
-my $USER   = "DarthHunter";
-my $PASS   = "CthrekGoru";
+my $ADMINS = undef;
+my $OWNER  = undef;
+my $USER   = undef;
+my $PASS   = undef;
 my $SLEEP  = 2;
 
 defined($USER) || die "USER must be set";
