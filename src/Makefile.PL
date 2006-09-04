@@ -4,7 +4,7 @@ use ExtUtils::MakeMaker;
 # the contents of the Makefile that is written.
 WriteMakefile(
     NAME              => 'Games::EternalLands::MapHelper',
-    VERSION           => '0.02',
+    VERSION           => '0.04',
     PREREQ_PM         => {}, # e.g., Module::Name => 1.1
     LIBS              => [''], # e.g., '-lm'
     DEFINE            => '', # e.g., '-DHAVE_SOMETHING'

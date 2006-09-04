@@ -1,21 +1,17 @@
 #!/usr/bin/perl -w
 
 use strict;
+use lib '.';
 
-use Games::EternalLands::Bot;
+use MyBot;
 use Games::EternalLands::Constants qw(%ClientCommandsByID $DEBUG_PACKETS $DEBUG_TYPES);
 
 # A simple Trade Bot, it buys and sells items as
 # defined by the -buyingFile and -sellingFIe
 # options - both these files are in yaml format
 
-my $SERVER = "eternal-lands.network-studio.com";
-my $PORT   = "2001";
-my $ADMINS = undef;
-my $OWNER  = undef;
-my $USER   = undef;
-my $PASS   = undef;
-my $SLEEP  = 2;
+our ($PORT, $SERVER, $ADMINS, $OWNER, $USER, $PASS, $ELDIR, $SLEEP);
+require 'config.pl';
 
 my $bot = Games::EternalLands::Bot->new(
               -server=>$SERVER, -port=>$PORT,

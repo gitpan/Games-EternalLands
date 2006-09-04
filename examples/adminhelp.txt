@@ -14,11 +14,12 @@
 |                                                       
 |          Commands available to everyone               
 |-------------------------------------------------------
-|help                      | this help text             
-|loc                       | tell you my location       
-|owner                     | tell you my owner          
-|inv                       | list what I sell           
-|wanted                    | list what I buy            
-|buy <N> <Item>            | buy <N> <Item> from me     
-|sell <N> <Item>           | sell <N> <Item> to me      
-|donate <N> <Item>         | donate <N> <Item> to me    
+|help                      |this help text             
+|loc                       |tell you my location       
+|owner                     |tell you my owner          
+|inv                       |list what I sell           
+|wanted                    |list what I buy            
+|buy <N> <Item>            |buy <N> <Item> from me     
+|sell <N> <Item>           |sell <N> <Item> to me      
+|donate <N> <Item>         |donate <N> <Item> to me    
+|sto [pattern]             |list storage

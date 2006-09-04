@@ -14,6 +14,8 @@ use vars qw(@ISA);
 
 use Games::EternalLands::Constants qw(:Debug :TypeContainers);
 
+our $VERSION = '0.04';
+
 my $ACTOR_TYPE_NPC = 2;
 
 ################################################
@@ -487,7 +489,7 @@ sub handleHelp
     my $help = $self->isAdmin($user) ? $self->{'adminhelp'} : $self->{'help'};
     if (defined($help)) {
         foreach my $line (@{$help}) {
-            $self->sendPM($user,"$line\r\n");
+            $self->sendPM($user,"$line");
         }
     }
 }
@@ -634,7 +636,7 @@ sub handleSell
     $self->{'IWant'}->{$name} += $qty;
     $self->{'myBuys'}->{$name} += $qty;
 
-    $self->tradeObject($price,'gold coinds');
+    $self->tradeObject($price,'gold coins');
 }
 
 sub adminCmds
@@ -1469,8 +1471,6 @@ sub qtyToBuy
     my $price  = $self->{'itemsToBuy'}->{$name}->[1];
     my $gc     = $self->qtyOnHand('gold coins');
 
-    $gc = defined($gc) ? $gc->{'quantity'} : 0;
-
     return (floor($price * $qty) > $gc) ? floor($gc/$price) : $qty;
 }
 
@@ -1486,7 +1486,7 @@ sub qtyInStock
     if (!defined($self->{'itemsToSell'}->{$name})) {
         return 0;
     }
-    my $toSell = $self->{'itemsToSell'}->{$name}->[0];
+    my $toSell = $self->{'itemsToSell'}->{$name}->[0] || 0;
     if (defined($self->{'myTrades'}->{$name})) {
          $toSell -= $self->{'myTrades'}->{$name}->{'quantity'};
          $onHand -= $self->{'myTrades'}->{$name}->{'quantity'};

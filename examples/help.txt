@@ -6,3 +6,4 @@ wanted            see a list of what I buy
 buy <N> <Item>    buy <N> <Item>(s) from me
 sell <N> <Item>   sell <N> <Item>(s) to me
 donate <N> <Item> give me <N> <Item>(s) for free
+sto [pattern]     list storage

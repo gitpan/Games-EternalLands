@@ -8,9 +8,11 @@ examples/Harvester.pl
 examples/help.txt
 examples/Hunter.pl
 examples/knowledge.yaml
-examples/readme
 examples/selling.yaml
 examples/Trader.pl
+examples/config.pl
+examples/MyBot.pm
+examples/README
 lib/Games/EternalLands/Bot.pm
 lib/Games/EternalLands/Client.pm
 lib/Games/EternalLands/Constants.pm

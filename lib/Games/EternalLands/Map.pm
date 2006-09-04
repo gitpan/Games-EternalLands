@@ -7,6 +7,8 @@ use Data::Dumper;
 use Games::EternalLands::MapHelper ':all';
 use vars qw(@ISA);
 
+our $VERSION = '0.04';
+
 sub setOccupied
 {
     my $self = shift;

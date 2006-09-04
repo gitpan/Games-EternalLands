@@ -10,7 +10,7 @@ use Data::Dumper;
 use Carp;
 use Tie::Cache;
 
-my $VERSION = "0.01";
+our $VERSION = "0.04";
 
 #   use Socket qw(!/^[AP]F_/ !SOMAXCONN !SOL_SOCKET);
 
